@@ -30,6 +30,8 @@ model Registration {
   entregaTime      DateTime?
   completoScanned  Boolean  @default(false)
   completoTime     DateTime?
+  sorteoScanned    Boolean  @default(false)
+  sorteoTime       DateTime?
 
   @@index([email])
   @@index([status])

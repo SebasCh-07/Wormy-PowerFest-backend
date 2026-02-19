@@ -23,7 +23,7 @@ export interface StatsResponse {
 
 export interface ValidateQRDTO {
   qr_code: string;
-  mode: 'entrada' | 'entrega' | 'completo';
+  mode: 'entrada' | 'entrega' | 'completo' | 'sorteo';
 }
 
 export interface ScanQRDTO {
@@ -32,4 +32,4 @@ export interface ScanQRDTO {
   device_id?: string;
 }
 
-export type ScanMode = 'entrada' | 'entrega' | 'completo';
+export type ScanMode = 'entrada' | 'entrega' | 'completo' | 'sorteo';

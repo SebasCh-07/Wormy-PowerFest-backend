@@ -21,6 +21,11 @@ export class ScanService {
 
     const canScan = this.canScanMode(registration, mode);
 
+    const eligible_for_sorteo =
+      registration.entradaScanned === true &&
+      registration.entregaScanned === true &&
+      registration.sorteoScanned === false;
+
     return {
       success: true,
       data: {
@@ -34,6 +39,7 @@ export class ScanService {
           completo: registration.completoScanned
         },
         can_scan: canScan.can,
+        eligible_for_sorteo: eligible_for_sorteo,
         message: canScan.message
       }
     };
@@ -199,9 +205,79 @@ export class ScanService {
     };
   }
 
+  async scanSorteo(qr_code: string, scanned_at?: string, device_id?: string) {
+    const registration = await prisma.registration.findUnique({
+      where: { id: qr_code },
+    });
+
+    if (!registration) {
+      return {
+        success: false,
+        error: {
+          code: 'INVALID_QR',
+          message: 'Código QR no válido'
+        }
+      };
+    }
+
+    // Validación 1: Debe tener entrada registrada
+    if (!registration.entradaScanned) {
+      return {
+        success: false,
+        error: {
+          code: 'NOT_ENTERED',
+          message: 'El participante debe registrar entrada primero'
+        }
+      };
+    }
+
+    // Validación 2: Debe tener pasaporte entregado
+    if (!registration.entregaScanned) {
+      return {
+        success: false,
+        error: {
+          code: 'PASSPORT_NOT_DELIVERED',
+          message: 'El participante debe recoger su pasaporte primero'
+        }
+      };
+    }
+
+    // Validación 3: No debe haber participado antes
+    if (registration.sorteoScanned) {
+      return {
+        success: false,
+        error: {
+          code: 'ALREADY_PARTICIPATED',
+          message: 'El participante ya está participando en el sorteo'
+        }
+      };
+    }
+
+    // Actualizar registro
+    const updated = await prisma.registration.update({
+      where: { id: qr_code },
+      data: {
+        sorteoScanned: true,
+        sorteoTime: scanned_at ? new Date(scanned_at) : new Date()
+      }
+    });
+
+    return {
+      success: true,
+      data: {
+        scan_id: `scan-${Date.now()}`,
+        participant_id: updated.id,
+        name: `${updated.firstName} ${updated.lastName}`,
+        mode: 'sorteo',
+        timestamp: updated.sorteoTime,
+        message: 'Participación en sorteo registrada exitosamente'
+      }
+    };
+  }
+
   async getHistory(date?: string, mode?: string, limit: number = 50) {
     const where: any = {};
-    
+
     if (mode === 'entrada') {
       where.entradaScanned = true;
     } else if (mode === 'entrega') {
@@ -294,6 +370,19 @@ export class ScanService {
         return { can: false, message: 'El pasaporte ya está completo' };
       }
       return { can: true, message: 'Puede marcar como completo' };
+    }
+
+    if (mode === 'sorteo') {
+      if (!registration.entradaScanned) {
+        return { can: false, message: 'Debe registrar entrada primero' };
+      }
+      if (!registration.entregaScanned) {
+        return { can: false, message: 'Debe recoger su pasaporte primero' };
+      }
+      if (registration.sorteoScanned) {
+        return { can: false, message: 'Ya está participando en el sorteo' };
+      }
+      return { can: true, message: 'Puede registrar participación en sorteo' };
     }
 
     return { can: false, message: 'Modo inválido' };
