@@ -12,13 +12,16 @@ export class RegistrationService {
         phone: data.phone,
         email: data.email,
         sports: data.sports,
+        birthDate: data.birthDate ? new Date(data.birthDate) : null,
+        gender: data.gender || null,
+        profession: data.profession || null,
       },
     });
   }
 
   async getAllRegistrations(status?: string, limit?: number, offset?: number) {
     const where = status ? { status: status as Status } : {};
-    
+
     return await prisma.registration.findMany({
       where,
       orderBy: { createdAt: 'desc' },
@@ -86,7 +89,7 @@ export class RegistrationService {
 
     const sportCounts = new Map<string, number>();
     let totalSportsCount = 0;
-    
+
     allRegistrations.forEach(reg => {
       reg.sports.forEach(sport => {
         sportCounts.set(sport, (sportCounts.get(sport) || 0) + 1);

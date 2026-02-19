@@ -14,6 +14,9 @@ model Registration {
   phone            String
   email            String
   sports           String[]
+  birthDate        DateTime?
+  gender           Gender?
+  profession       String?
   status           Status   @default(PENDING)
   checkInTime      DateTime?
   registrationDate DateTime @default(now())
@@ -31,6 +34,14 @@ model Registration {
   @@index([email])
   @@index([status])
 }
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  PREFER_NOT_TO_SAY
+}
+
 
 enum Status {
   PENDING

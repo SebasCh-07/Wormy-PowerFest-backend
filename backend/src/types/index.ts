@@ -4,6 +4,9 @@ export interface CreateRegistrationDTO {
   phone: string;
   email: string;
   sports: string[];
+  birthDate?: string; 
+  gender?: 'MALE' | 'FEMALE' | 'OTHER' | 'PREFER_NOT_TO_SAY';
+  profession?: string;
 }
 
 export interface VerifyTicketDTO {
