@@ -19,7 +19,7 @@ export class ScanController {
         });
       }
 
-      if (!['entrada', 'entrega', 'completo'].includes(mode)) {
+      if (!['entrada', 'entrega', 'completo', 'sorteo'].includes(mode)) {
         return res.status(400).json({
           success: false,
           error: {
@@ -137,6 +137,39 @@ export class ScanController {
       res.json(result);
     } catch (error) {
       console.error('Error scanning completo:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'SERVER_ERROR',
+          message: 'Error interno del servidor'
+        }
+      });
+    }
+  }
+
+  async sorteo(req: Request, res: Response) {
+    try {
+      const { qr_code, scanned_at, device_id }: ScanQRDTO = req.body;
+
+      if (!qr_code) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'INVALID_REQUEST',
+            message: 'QR code es requerido'
+          }
+        });
+      }
+
+      const result = await scanService.scanSorteo(qr_code, scanned_at, device_id);
+      
+      if (!result.success) {
+        return res.status(400).json(result);
+      }
+
+      res.json(result);
+    } catch (error) {
+      console.error('Error scanning sorteo:', error);
       res.status(500).json({
         success: false,
         error: {

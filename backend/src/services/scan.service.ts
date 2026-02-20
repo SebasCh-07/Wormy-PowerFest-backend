@@ -36,7 +36,8 @@ export class ScanService {
         status: {
           entrada: registration.entradaScanned,
           entrega: registration.entregaScanned,
-          completo: registration.completoScanned
+          completo: registration.completoScanned,
+          sorteo: registration.sorteoScanned
         },
         can_scan: canScan.can,
         eligible_for_sorteo: eligible_for_sorteo,
@@ -284,6 +285,8 @@ export class ScanService {
       where.entregaScanned = true;
     } else if (mode === 'completo') {
       where.completoScanned = true;
+    } else if (mode === 'sorteo') {
+      where.sorteoScanned = true;
     }
 
     const registrations = await prisma.registration.findMany({
@@ -297,6 +300,7 @@ export class ScanService {
       if (mode === 'entrada' && reg.entradaTime) timestamp = reg.entradaTime;
       if (mode === 'entrega' && reg.entregaTime) timestamp = reg.entregaTime;
       if (mode === 'completo' && reg.completoTime) timestamp = reg.completoTime;
+      if (mode === 'sorteo' && reg.sorteoTime) timestamp = reg.sorteoTime;
 
       return {
         scan_id: `scan-${reg.id}`,
@@ -318,14 +322,15 @@ export class ScanService {
   }
 
   async getStats(date?: string) {
-    const [entrada, entrega, completo, total] = await Promise.all([
+    const [entrada, entrega, completo, sorteo, total] = await Promise.all([
       prisma.registration.count({ where: { entradaScanned: true } }),
       prisma.registration.count({ where: { entregaScanned: true } }),
       prisma.registration.count({ where: { completoScanned: true } }),
+      prisma.registration.count({ where: { sorteoScanned: true } }),
       prisma.registration.count()
     ]);
 
-    const totalScans = entrada + entrega + completo;
+    const totalScans = entrada + entrega + completo + sorteo;
 
     return {
       success: true,
@@ -335,10 +340,12 @@ export class ScanService {
         by_mode: {
           entrada,
           entrega,
-          completo
+          completo,
+          sorteo
         },
         valid_scans: totalScans,
         invalid_scans: 0,
+        sorteo_participants: sorteo,
         last_updated: new Date().toISOString()
       }
     };
