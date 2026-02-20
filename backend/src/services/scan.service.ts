@@ -109,16 +109,6 @@ export class ScanService {
       };
     }
 
-    if (!registration.entradaScanned) {
-      return {
-        success: false,
-        error: {
-          code: 'NOT_ENTERED',
-          message: 'El participante debe registrar entrada primero'
-        }
-      };
-    }
-
     if (registration.entregaScanned) {
       return {
         success: false,
@@ -129,11 +119,20 @@ export class ScanService {
       };
     }
 
+    // Marca tanto entrada como entrega (fusión de escáneres)
+    const scanTime = scanned_at ? new Date(scanned_at) : new Date();
+    
     const updated = await prisma.registration.update({
       where: { id: qr_code },
       data: {
+        // Marca entrada automáticamente si no estaba marcada
+        entradaScanned: true,
+        entradaTime: registration.entradaTime || scanTime,
+        status: 'CHECKED_IN',
+        checkInTime: registration.checkInTime || scanTime,
+        // Marca entrega
         entregaScanned: true,
-        entregaTime: scanned_at ? new Date(scanned_at) : new Date()
+        entregaTime: scanTime
       }
     });
 
@@ -145,7 +144,7 @@ export class ScanService {
         name: `${updated.firstName} ${updated.lastName}`,
         mode: 'entrega',
         timestamp: updated.entregaTime,
-        message: 'Entrega de pasaporte registrada'
+        message: 'Entrada y entrega de pasaporte registrada'
       }
     };
   }
@@ -360,13 +359,10 @@ export class ScanService {
     }
 
     if (mode === 'entrega') {
-      if (!registration.entradaScanned) {
-        return { can: false, message: 'Debe registrar entrada primero' };
-      }
       if (registration.entregaScanned) {
         return { can: false, message: 'El pasaporte ya fue entregado' };
       }
-      return { can: true, message: 'Puede entregar pasaporte' };
+      return { can: true, message: 'Puede registrar entrada y entregar pasaporte' };
     }
 
     if (mode === 'completo') {

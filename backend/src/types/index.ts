@@ -3,10 +3,10 @@ export interface CreateRegistrationDTO {
   lastName: string;
   phone: string;
   email: string;
-  sports: string[];
-  birthDate?: string; 
-  gender?: 'MALE' | 'FEMALE' | 'OTHER' | 'PREFER_NOT_TO_SAY';
-  profession?: string;
+  sports?: string[];
+  cedula?: string;
+  edad?: number;
+  sector?: string;
 }
 
 export interface VerifyTicketDTO {

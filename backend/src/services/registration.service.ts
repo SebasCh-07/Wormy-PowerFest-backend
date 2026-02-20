@@ -12,9 +12,9 @@ export class RegistrationService {
         phone: data.phone,
         email: data.email,
         sports: data.sports,
-        birthDate: data.birthDate ? new Date(data.birthDate) : null,
-        gender: data.gender || null,
-        profession: data.profession || null,
+        cedula: data.cedula || null,
+        edad: data.edad || null,
+        sector: data.sector || null,
       },
     });
   }

@@ -80,7 +80,6 @@ export class EmailService {
                   
                   <div class="footer">
                     <p>Wormy PowerFest - El evento deportivo más divertido del año</p>
-                    <p>Si tienes alguna pregunta, responde a este email.</p>
                   </div>
                 </div>
               </body>
@@ -116,71 +115,4 @@ export class EmailService {
     }
   }
 
-  async sendQRWhatsApp(phone: string, firstName: string, ticketId: string) {
-    try {
-      console.log('📱 Intentando enviar WhatsApp a:', phone);
-      console.log('🔑 TWILIO configurado:', !!process.env.TWILIO_ACCOUNT_SID);
-
-      // Si tienes Twilio configurado
-      if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
-        const accountSid = process.env.TWILIO_ACCOUNT_SID;
-        const authToken = process.env.TWILIO_AUTH_TOKEN;
-        const from = process.env.TWILIO_WHATSAPP_FROM || 'whatsapp:+14155238886';
-        
-        // Formatear número de teléfono (asumiendo formato Ecuador 09XXXXXXXX -> +593XXXXXXXXX)
-        let formattedPhone = phone;
-        if (phone.startsWith('09')) {
-          formattedPhone = '+593' + phone.substring(1);
-        }
-        const to = `whatsapp:${formattedPhone}`;
-
-        const message = `🎟️ *¡Hola ${firstName}!*
-
-Tu registro para *Wormy PowerFest* ha sido confirmado exitosamente.
-
-🆔 *ID de Ticket:* ${ticketId}
-
-📧 Revisa tu email para ver tu código QR.
-
-📱 Presenta tu código QR en la entrada del evento.
-
-¡Nos vemos pronto! 🐛💪`;
-
-        console.log('📤 Enviando WhatsApp a:', to);
-
-        const response = await fetch(
-          `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': 'Basic ' + Buffer.from(`${accountSid}:${authToken}`).toString('base64'),
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: new URLSearchParams({
-              From: from,
-              To: to,
-              Body: message,
-            }),
-          }
-        );
-
-        if (response.ok) {
-          const data: any = await response.json();
-          console.log('✅ WhatsApp enviado exitosamente. SID:', data.sid);
-          return { sent: true, messageId: data.sid };
-        } else {
-          const error = await response.text();
-          console.error('❌ Error sending WhatsApp with Twilio:', error);
-          return { sent: false, error: 'Error al enviar WhatsApp' };
-        }
-      }
-
-      // Fallback: Si no hay Twilio configurado
-      console.log('⚠️ Twilio no configurado. Configura TWILIO_* en .env');
-      return { sent: false, error: 'WhatsApp service no configurado' };
-    } catch (error) {
-      console.error('❌ Error sending WhatsApp:', error);
-      return { sent: false, error: 'Error al enviar WhatsApp' };
-    }
-  }
 }

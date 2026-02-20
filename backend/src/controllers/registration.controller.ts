@@ -11,7 +11,7 @@ export class RegistrationController {
     try {
       const data: CreateRegistrationDTO = req.body;
 
-      if (!data.firstName || !data.lastName || !data.email || !data.phone || !data.sports) {
+      if (!data.firstName || !data.lastName || !data.email || !data.phone) {
         return res.status(400).json({
           success: false,
           error: 'Todos los campos son requeridos'
@@ -35,19 +35,21 @@ export class RegistrationController {
       }
 
       const validSports = ['Correr', 'Nadar', 'Gimnasio', 'Baile', 'Futbol', 'Basket', 'Ninguno'];
-      if (!Array.isArray(data.sports) || data.sports.length === 0) {
-        return res.status(400).json({
-          success: false,
-          error: 'Debe seleccionar al menos un deporte'
-        });
-      }
+      if (data.sports && data.sports.length > 0) {
+        if (!Array.isArray(data.sports)) {
+          return res.status(400).json({
+            success: false,
+            error: 'El campo deportes debe ser un array'
+          });
+        }
 
-      const invalidSports = data.sports.filter(s => !validSports.includes(s));
-      if (invalidSports.length > 0) {
-        return res.status(400).json({
-          success: false,
-          error: 'Deportes inválidos seleccionados'
-        });
+        const invalidSports = data.sports.filter(s => !validSports.includes(s));
+        if (invalidSports.length > 0) {
+          return res.status(400).json({
+            success: false,
+            error: 'Deportes inválidos seleccionados'
+          });
+        }
       }
 
       const existingEmail = await registrationService.getRegistrationByEmail(data.email);
@@ -58,41 +60,61 @@ export class RegistrationController {
         });
       }
 
-      if (data.birthDate) {
-        const birthDate = new Date(data.birthDate);
-        const today = new Date();
-        const age = today.getFullYear() - birthDate.getFullYear();
-
-
-        if (isNaN(birthDate.getTime())) {
+      // Validar cédula ecuatoriana si se proporciona
+      if (data.cedula) {
+        const cedulaRegex = /^\d{10}$/;
+        if (!cedulaRegex.test(data.cedula)) {
           return res.status(400).json({
             success: false,
-            error: 'Fecha de nacimiento inválida'
-          })
+            error: 'La cédula debe tener 10 dígitos'
+          });
         }
 
-
-        if (age < 5 || age > 120) {
+        // Validación del dígito verificador
+        const digits = data.cedula.split('').map(Number);
+        const province = parseInt(data.cedula.substring(0, 2));
+        
+        if (province < 1 || province > 24) {
           return res.status(400).json({
             success: false,
-            error: 'La edad debe estar entre 5 y 120 años'
-          })
+            error: 'Cédula inválida: código de provincia incorrecto'
+          });
         }
-      }
-      if (data.gender) {
-        const validGenders = ['MALE', 'FEMALE', 'OTHER', 'PREFER_NOT_TO_SAY'];
-        if (!validGenders.includes(data.gender)) {
+
+        const coefficients = [2, 1, 2, 1, 2, 1, 2, 1, 2];
+        let sum = 0;
+
+        for (let i = 0; i < 9; i++) {
+          let value = digits[i] * coefficients[i];
+          if (value >= 10) value -= 9;
+          sum += value;
+        }
+
+        const verifier = sum % 10 === 0 ? 0 : 10 - (sum % 10);
+        
+        if (verifier !== digits[9]) {
           return res.status(400).json({
             success: false,
-            error: 'Género inválido'
+            error: 'Cédula inválida: dígito verificador incorrecto'
           });
         }
       }
 
-      if (data.profession && data.profession.length > 100) {
+      // Validar edad si se proporciona
+      if (data.edad !== undefined) {
+        if (typeof data.edad !== 'number' || data.edad < 5 || data.edad > 120) {
+          return res.status(400).json({
+            success: false,
+            error: 'La edad debe estar entre 5 y 120 años'
+          });
+        }
+      }
+
+      // Validar sector si se proporciona
+      if (data.sector && data.sector.length > 100) {
         return res.status(400).json({
           success: false,
-          error: 'La profesión no puede tener más de 100 caracteres'
+          error: 'El sector no puede tener más de 100 caracteres'
         });
       }
       const registration = await registrationService.createRegistration(data);
@@ -286,57 +308,6 @@ export class RegistrationController {
       res.status(500).json({
         success: false,
         error: 'Error al actualizar registro'
-      });
-    }
-  }
-
-  async sendWhatsApp(req: Request, res: Response) {
-    try {
-      const { id } = req.params;
-      const { phone } = req.body;
-
-      if (!phone) {
-        return res.status(400).json({
-          success: false,
-          error: 'El teléfono es requerido'
-        });
-      }
-
-      // Validar teléfono
-      const phoneRegex = /^09\d{8}$/;
-      if (!phoneRegex.test(phone)) {
-        return res.status(400).json({
-          success: false,
-          error: 'El teléfono debe tener 10 dígitos y empezar con 09'
-        });
-      }
-
-      const registration = await registrationService.getRegistrationById(id);
-
-      if (!registration) {
-        return res.status(404).json({
-          success: false,
-          error: 'Registro no encontrado'
-        });
-      }
-
-      // Enviar por WhatsApp
-      const whatsappResult = await emailService.sendQRWhatsApp(
-        phone,
-        registration.firstName,
-        registration.id
-      );
-
-      res.json({
-        success: true,
-        message: 'QR enviado por WhatsApp exitosamente',
-        notification: whatsappResult
-      });
-    } catch (error) {
-      console.error('Error sending WhatsApp:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Error al enviar WhatsApp'
       });
     }
   }
