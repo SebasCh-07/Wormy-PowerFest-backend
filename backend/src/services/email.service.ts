@@ -50,7 +50,13 @@ export class EmailService {
                     margin: 20px 0;
                   }
                   .qr-code { max-width: 300px; }
-                  .qr-fallback { display: none; max-width: 300px; }
+                  .qr-fallback { 
+                    max-width: 300px; 
+                    max-height: 0 !important; 
+                    overflow: hidden !important; 
+                    mso-hide: all;
+                    display: none !important;
+                  }
                   .ticket-id { 
                     font-family: monospace; 
                     color: #666; 
