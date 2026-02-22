@@ -16,9 +16,6 @@ export class EmailService {
         }
       });
 
-      // Extraer solo el base64 sin el prefijo "data:image/png;base64,"
-      const base64Data = qrCodeDataURL.split(',')[1];
-
       // Si tienes Resend configurado
       if (process.env.RESEND_API_KEY) {
         console.log('✅ Resend configurado, enviando email...');
@@ -72,7 +69,7 @@ export class EmailService {
                   
                   <div class="qr-container">
                     <h2>Tu Código QR</h2>
-                    <img src="cid:qrcode" alt="QR Code" class="qr-code"/>
+                    <img src="${qrCodeDataURL}" alt="QR Code" class="qr-code"/>
                     <p class="ticket-id">ID: ${ticketId}</p>
                   </div>
                   
@@ -84,14 +81,7 @@ export class EmailService {
                 </div>
               </body>
               </html>
-            `,
-            attachments: [
-              {
-                filename: 'qr-code.png',
-                content: base64Data,
-                content_id: 'qrcode'
-              }
-            ]
+            `
           }),
         });
 
