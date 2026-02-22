@@ -16,6 +16,9 @@ export class EmailService {
         }
       });
 
+      // Extraer solo el base64 sin el prefijo para el attachment
+      const base64Data = qrCodeDataURL.split(',')[1];
+
       // Si tienes Resend configurado
       if (process.env.RESEND_API_KEY) {
         console.log('✅ Resend configurado, enviando email...');
@@ -81,7 +84,15 @@ export class EmailService {
                 </div>
               </body>
               </html>
-            `
+            `,
+            attachments: [
+              {
+                filename: 'qr-code.png',
+                content: base64Data,
+                content_type: 'image/png',
+                disposition: 'attachment'
+              }
+            ]
           }),
         });
 
