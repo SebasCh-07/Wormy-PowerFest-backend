@@ -16,6 +16,9 @@ export class EmailService {
         }
       });
 
+      // Extraer solo el base64 sin el prefijo para el attachment
+      const base64Data = qrCodeDataURL.split(',')[1];
+
       // Si tienes Resend configurado
       if (process.env.RESEND_API_KEY) {
         console.log('✅ Resend configurado, enviando email...');
@@ -47,6 +50,7 @@ export class EmailService {
                     margin: 20px 0;
                   }
                   .qr-code { max-width: 300px; }
+                  .qr-fallback { display: none; max-width: 300px; }
                   .ticket-id { 
                     font-family: monospace; 
                     color: #666; 
@@ -69,7 +73,8 @@ export class EmailService {
                   
                   <div class="qr-container">
                     <h2>Tu Código QR</h2>
-                    <img src="${qrCodeDataURL}" alt="QR Code" class="qr-code"/>
+                    <img src="cid:qrcode" alt="QR Code" class="qr-code"/>
+                    <img src="${qrCodeDataURL}" alt="QR Code" class="qr-fallback"/>
                     <p class="ticket-id">ID: ${ticketId}</p>
                   </div>
                   
@@ -81,7 +86,16 @@ export class EmailService {
                 </div>
               </body>
               </html>
-            `
+            `,
+            attachments: [
+              {
+                filename: 'qr-code.png',
+                content: base64Data,
+                content_type: 'image/png',
+                disposition: 'inline',
+                content_id: '<qrcode>'
+              }
+            ]
           }),
         });
 
