@@ -98,6 +98,15 @@ export class RegistrationController {
             error: 'Cédula inválida: dígito verificador incorrecto'
           });
         }
+
+        // Validar que la cédula no esté duplicada
+        const existingCedula = await registrationService.getRegistrationByCedula(data.cedula);
+        if (existingCedula) {
+          return res.status(409).json({
+            success: false,
+            error: 'Esta cédula ya está registrada'
+          });
+        }
       }
 
       // Validar edad si se proporciona

@@ -35,6 +35,7 @@ model Registration {
 
   @@index([email])
   @@index([status])
+  @@index([cedula])
 }
 
 
