@@ -32,7 +32,7 @@ export class EmailService {
           body: JSON.stringify({
             from: process.env.FROM_EMAIL || 'onboarding@resend.dev',
             to: email,
-            subject: '🎟️ Tu entrada para Wormy PowerFest',
+            subject: '🎟️ Tu entrada para Warmi PowerFest',
             html: `
               <!DOCTYPE html>
               <html>
@@ -68,7 +68,7 @@ export class EmailService {
               <body>
                 <div class="container">
                   <h1 class="header">¡Hola ${firstName}! 🐛</h1>
-                  <p>Tu registro para <strong>Wormy PowerFest</strong> ha sido confirmado.</p>
+                  <p>Tu registro para <strong>Warmi PowerFest</strong> ha sido confirmado.</p>
                   
                   <div class="qr-container">
                     <h2>Tu Código QR</h2>
@@ -79,7 +79,7 @@ export class EmailService {
                   <p>Presenta este código QR en la entrada del evento.</p>
                   
                   <div class="footer">
-                    <p>Wormy PowerFest - El evento deportivo más divertido del año</p>
+                    <p>Warmi PowerFest - El evento deportivo más divertido del año</p>
                   </div>
                 </div>
               </body>
