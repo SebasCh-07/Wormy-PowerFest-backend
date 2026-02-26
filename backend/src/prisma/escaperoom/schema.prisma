@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../../../node_modules/.prisma/client-escaperoom"
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("ESCAPEROOM_DATABASE_URL")
+  shadowDatabaseUrl = env("ESCAPEROOM_SHADOW_DATABASE_URL")
+}
+
+model User {
+  id              String        @id @default(cuid())
+  firstName       String
+  lastName        String
+  email           String        @unique
+  whatsapp        String
+  triviaCompleted Boolean       @default(false)
+  createdAt       DateTime
+  partnerId       String?       @unique
+  partner         User?         @relation("GroupPartners", fields: [partnerId], references: [id], onDelete: SetNull)
+  partnerOf       User?         @relation("GroupPartners")
+  reservations     Reservation[]
+}
+
+model Question {
+  id      String   @id @default(cuid())
+  text    String
+  order   Int      @unique
+  answers Answer[]
+}
+
+model Answer {
+  id         String   @id @default(cuid())
+  text       String
+  isCorrect  Boolean
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+}
+
+model TimeSlot {
+  id                  String        @id @default(cuid())
+  date                DateTime
+  startTime           String
+  endTime             String
+  capacity            Int           @default(2)
+  reservations        Reservation[]
+}
+
+enum ReservationStatus {
+  RESERVED
+  USED
+  CANCELLED
+}
+
+model Reservation {
+  id          String            @id @default(cuid())
+  userId      String
+  timeslotId  String
+  qrCode      String            @unique
+  status      ReservationStatus @default(RESERVED)
+  checkedInAt DateTime?
+  createdAt   DateTime
+  interestRating Int?
+  ratedAt     DateTime?
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  timeslot    TimeSlot          @relation(fields: [timeslotId], references: [id], onDelete: Cascade)
+
+  @@index([timeslotId])
+}
+
+model RegistrationControl {
+  id        String   @id @default(cuid())
+  isOpen    Boolean
+  reason    String?
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+}
+
+model TimeslotConfig {
+  id              String     @id @default(cuid())
+  eventDates      DateTime[]
+  durationMinutes Int        @default(15)
+  startHour       Int        @default(8)
+  endHour         Int        @default(20)
+  slotsPerDay     Int        @default(48)
+  updatedAt       DateTime   @updatedAt
+  updatedBy       String?
+}

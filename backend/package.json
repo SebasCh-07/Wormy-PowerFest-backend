@@ -9,19 +9,28 @@
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "escaperoom:generate": "prisma generate --schema=./src/prisma/escaperoom/schema.prisma",
+    "escaperoom:migrate": "prisma migrate dev --schema=./src/prisma/escaperoom/schema.prisma",
+    "escaperoom:push": "prisma db push --schema=./src/prisma/escaperoom/schema.prisma",
+    "escaperoom:seed": "ts-node src/prisma/escaperoom/seed.ts",
+    "generate:all": "npm run prisma:generate && npm run escaperoom:generate"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@prisma/client": "^5.7.1",
+    "@types/uuid": "^10.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "nodemailer": "^8.0.1",
     "prisma": "^5.7.1",
-    "qrcode": "^1.5.4"
+    "qrcode": "^1.5.4",
+    "twilio": "^5.12.2",
+    "uuid": "^13.0.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
