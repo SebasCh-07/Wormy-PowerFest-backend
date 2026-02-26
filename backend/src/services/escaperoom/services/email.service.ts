@@ -10,8 +10,8 @@ export const sendReservationEmail = async (
   try {
     console.log('📧 Intentando enviar email a:', to);
     console.log('🔑 ESCAPEROOM_RESEND_API_KEY configurado:', !!process.env.ESCAPEROOM_RESEND_API_KEY);
-    console.log('🔑 API Key (primeros 10 chars):', process.env.ESCAPEROOM_RESEND_API_KEY?.substring(0, 10));
-    console.log('📨 FROM_EMAIL:', process.env.ESCAPEROOM_FROM_EMAIL);
+    console.log('🔑 API Key completa:', process.env.ESCAPEROOM_RESEND_API_KEY);
+    console.log('📨 FROM_EMAIL completo:', process.env.ESCAPEROOM_FROM_EMAIL);
 
     // Generar QR como imagen base64
     const qrCodeDataURL = await QRCode.toDataURL(qrCode, {
@@ -37,7 +37,7 @@ export const sendReservationEmail = async (
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: 'info@krakedev.com',
+          from: process.env.ESCAPEROOM_FROM_EMAIL || 'Escape Room <info@krakedev.com>',
           to: to,
           subject: '🎉 Confirmación de Reserva - Escape Room',
           html: `
