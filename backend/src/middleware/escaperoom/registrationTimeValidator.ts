@@ -103,11 +103,11 @@ export const validateRegistrationTime = async (
 
     // Todo OK, permitir acceso
     next();
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error en validación de horario:', error);
     return res.status(500).json({
       success: false,
-      error: 'Error al validar horario de registro',
+      error: error.message || 'Error al validar horario de registro',
     });
   }
 };

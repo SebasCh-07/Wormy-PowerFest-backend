@@ -1,5 +1,6 @@
 import { prismaEscapeRoom as prisma } from '../../services/escaperoom/prisma';
 import { timeslotService } from '../../services/escaperoom/services/timeslot.service';
+import { BadRequestError } from '../../services/escaperoom/utils/errors';
 
 export class AdminService {
   // ==================== CONTROL DE REGISTRO ====================
@@ -102,7 +103,7 @@ export class AdminService {
     });
 
     if (!config || !config.eventDates || config.eventDates.length === 0) {
-      throw new Error('No hay configuración de turnos. Configure primero.');
+      throw new BadRequestError('No se puede generar turnos. No existe una configuración de turnos en el sistema. Por favor, configura primero las fechas del evento, horarios y duración de los turnos desde el panel de administración.');
     }
 
     // Borrar turnos existentes antes de generar nuevos

@@ -17,15 +17,22 @@ export class CheckinService {
     });
 
     if (!reservation) {
-      throw new NotFoundError('Reserva no encontrada');
+      throw new NotFoundError('Código QR no válido. No se encontró ninguna reserva asociada a este código. Verifica que el QR sea correcto o contacta al personal del evento.');
     }
 
     if (reservation.status === 'USED') {
-      throw new BadRequestError('Este QR ya fue utilizado');
+      const usedDate = reservation.checkedInAt 
+        ? new Date(reservation.checkedInAt).toLocaleString('es-ES', { 
+            dateStyle: 'short', 
+            timeStyle: 'short',
+            timeZone: 'America/Guayaquil'
+          })
+        : 'fecha desconocida';
+      throw new BadRequestError(`Este código QR ya fue utilizado el ${usedDate}. Cada QR solo puede usarse una vez. Si necesitas ayuda, contacta al personal del evento.`);
     }
 
     if (reservation.status === 'CANCELLED') {
-      throw new BadRequestError('Esta reserva fue cancelada');
+      throw new BadRequestError('Esta reserva fue cancelada previamente y no puede ser utilizada. Por favor, crea una nueva reserva o contacta al personal del evento.');
     }
 
     return reservation;
@@ -61,7 +68,7 @@ export class CheckinService {
     });
 
     if (!newTimeslot) {
-      throw new NotFoundError('El turno seleccionado no existe');
+      throw new NotFoundError('El turno seleccionado no existe o ya no está disponible. Por favor, actualiza la lista de turnos y selecciona otro horario.');
     }
 
     // Actualizar reserva con nuevo turno
@@ -158,7 +165,7 @@ export class CheckinService {
     // Verificar que ambos usuarios sean partners
     if (reservation1.user.partnerId !== reservation2.user.id || 
         reservation2.user.partnerId !== reservation1.user.id) {
-      throw new BadRequestError('Los QR escaneados no pertenecen al mismo grupo');
+      throw new BadRequestError(`Los códigos QR escaneados no pertenecen al mismo grupo. ${reservation1.user.firstName} y ${reservation2.user.firstName} no están registrados como compañeros. Verifica que ambos QR sean del mismo grupo.`);
     }
 
     // Hacer check-in de ambos en una transacción
@@ -205,7 +212,7 @@ export class CheckinService {
     // Verificar que ambos usuarios sean partners
     if (reservation1.user.partnerId !== reservation2.user.id || 
         reservation2.user.partnerId !== reservation1.user.id) {
-      throw new BadRequestError('Los QR escaneados no pertenecen al mismo grupo');
+      throw new BadRequestError(`Los códigos QR escaneados no pertenecen al mismo grupo. ${reservation1.user.firstName} y ${reservation2.user.firstName} no están registrados como compañeros. Verifica que ambos QR sean del mismo grupo.`);
     }
 
     // Verificar que el nuevo turno existe
@@ -214,7 +221,7 @@ export class CheckinService {
     });
 
     if (!newTimeslot) {
-      throw new NotFoundError('El turno seleccionado no existe');
+      throw new NotFoundError('El turno seleccionado no existe o ya no está disponible. Por favor, actualiza la lista de turnos y selecciona otro horario.');
     }
 
     // Actualizar ambas reservas con nuevo turno
@@ -367,7 +374,7 @@ export class CheckinService {
   async rateGroup(reservationId1: string, reservationId2: string, rating: number) {
     // Validar rating (1 = No interesado, 2 = Poco, 3 = Bastante)
     if (![1, 2, 3].includes(rating)) {
-      throw new BadRequestError('Rating inválido. Debe ser 1, 2 o 3');
+      throw new BadRequestError(`Calificación inválida. El valor debe ser 1 (No interesado), 2 (Poco interesado) o 3 (Bastante interesado). Valor recibido: ${rating}`);
     }
 
     const ratedTime = getEcuadorTime();

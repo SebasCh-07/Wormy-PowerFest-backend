@@ -20,7 +20,7 @@ export class ReservationService {
     }
 
     if (!user.triviaCompleted) {
-      throw new BadRequestError('Debes completar la trivia primero');
+      throw new BadRequestError('No puedes crear una reserva sin completar la trivia. Por favor, completa las 5 preguntas de trivia antes de reservar tu turno.');
     }
 
     // Verificar si ya tiene una reserva activa (no cancelada)
@@ -29,7 +29,10 @@ export class ReservationService {
     );
 
     if (activeReservation) {
-      throw new ConflictError('Ya tienes una reserva activa');
+      const timeslotInfo = activeReservation.timeslotId 
+        ? ` para el turno de las ${activeReservation.timeslot?.startTime || 'horario asignado'}`
+        : '';
+      throw new ConflictError(`Ya tienes una reserva activa${timeslotInfo}. No puedes crear múltiples reservas. Si necesitas cambiar tu turno, usa la opción de reenvío de QR.`);
     }
 
     // 2. Verificar que el turno existe y tiene capacidad disponible
@@ -53,7 +56,7 @@ export class ReservationService {
     // Validar capacidad del turno
     const activeReservationsCount = timeslot.reservations.length;
     if (activeReservationsCount >= timeslot.capacity) {
-      throw new BadRequestError(`Este turno ya está completo (${timeslot.capacity}/${timeslot.capacity} personas)`);
+      throw new BadRequestError(`El turno de las ${timeslot.startTime} - ${timeslot.endTime} ya está completo (${timeslot.capacity}/${timeslot.capacity} personas reservadas). Por favor, selecciona otro horario disponible.`);
     }
 
     // 3. Generar código QR único
@@ -145,13 +148,13 @@ export class ReservationService {
     // Verificar que ambos completaron la trivia
     for (const user of users) {
       if (!user.triviaCompleted) {
-        throw new BadRequestError(`El usuario ${user.firstName} ${user.lastName} debe completar la trivia primero`);
+        throw new BadRequestError(`No se puede crear la reserva. ${user.firstName} ${user.lastName} (${user.email}) aún no ha completado la trivia. Ambas personas del grupo deben completar las 5 preguntas antes de reservar.`);
       }
 
       // Verificar que no tengan reservas activas
       const activeReservation = user.reservations.find(r => r.status !== 'CANCELLED');
       if (activeReservation) {
-        throw new ConflictError(`El usuario ${user.firstName} ${user.lastName} ya tiene una reserva activa`);
+        throw new ConflictError(`No se puede crear la reserva. ${user.firstName} ${user.lastName} (${user.email}) ya tiene una reserva activa. Cada persona solo puede tener una reserva a la vez.`);
       }
     }
 
@@ -170,14 +173,14 @@ export class ReservationService {
     });
 
     if (!timeslot) {
-      throw new NotFoundError('Turno no encontrado');
+      throw new NotFoundError('El turno seleccionado no existe o ya no está disponible. Por favor, actualiza la página y selecciona otro turno.');
     }
 
     const activeReservationsCount = timeslot.reservations.length;
     const availableSpots = timeslot.capacity - activeReservationsCount;
 
     if (availableSpots < 2) {
-      throw new BadRequestError(`Este turno no tiene suficiente capacidad (disponibles: ${availableSpots}/2)`);
+      throw new BadRequestError(`El turno de las ${timeslot.startTime} - ${timeslot.endTime} no tiene suficiente capacidad para 2 personas. Solo quedan ${availableSpots} lugar(es) disponible(s). Por favor, selecciona otro horario.`);
     }
 
     // 3. Generar códigos QR únicos para cada persona
@@ -310,21 +313,35 @@ export class ReservationService {
     // Si no tiene reserva, crear una nueva (requiere timeslotId)
     if (!activeReservation) {
       if (!newTimeslotId) {
-        throw new BadRequestError('Debes seleccionar un turno para crear tu reserva');
+        throw new BadRequestError('No tienes ninguna reserva activa. Para crear tu primera reserva, debes seleccionar un turno disponible del calendario.');
       }
 
-      // Verificar que el turno existe
+      // Verificar que el turno existe y tiene capacidad
       const timeslot = await prisma.timeSlot.findUnique({
         where: { id: newTimeslotId },
+        include: {
+          reservations: {
+            where: {
+              status: {
+                not: 'CANCELLED'
+              }
+            }
+          }
+        }
       });
 
       if (!timeslot) {
-        throw new NotFoundError('El turno seleccionado no existe');
+        throw new NotFoundError('El turno seleccionado no existe o ya no está disponible. Por favor, actualiza la página y selecciona otro turno.');
       }
 
-      // Generar código QR único
-      const qrCode = uuidv4();
-      const qrImage = await generateQR(qrCode);
+      // Si tiene partner, verificar capacidad para 2 personas
+      const requiredCapacity = user.partnerId ? 2 : 1;
+      const activeReservationsCount = timeslot.reservations.length;
+      const availableSpots = timeslot.capacity - activeReservationsCount;
+
+      if (availableSpots < requiredCapacity) {
+        throw new BadRequestError(`Este turno no tiene suficiente capacidad (disponibles: ${availableSpots}/${requiredCapacity})`);
+      }
 
       // Actualizar datos del usuario si se proporcionaron
       const updateUserData: any = {};
@@ -366,7 +383,143 @@ export class ReservationService {
         });
       }
 
-      // Crear reserva
+      // Actualizar datos del partner si se proporcionaron
+      let updatedPartner = user.partner;
+      if (user.partner && (newPartnerEmail || newPartnerWhatsapp)) {
+        const updatePartnerData: any = {};
+
+        if (newPartnerEmail && newPartnerEmail !== user.partner.email) {
+          const existingUser = await prisma.user.findUnique({
+            where: { email: newPartnerEmail },
+          });
+          if (existingUser && existingUser.id !== user.partner.id) {
+            throw new ConflictError('El nuevo email del compañero ya está en uso');
+          }
+          updatePartnerData.email = newPartnerEmail;
+        }
+
+        if (newPartnerWhatsapp && newPartnerWhatsapp !== user.partner.whatsapp) {
+          updatePartnerData.whatsapp = newPartnerWhatsapp;
+        }
+
+        if (Object.keys(updatePartnerData).length > 0) {
+          updatedPartner = await prisma.user.update({
+            where: { id: user.partner.id },
+            data: updatePartnerData,
+          });
+        }
+      }
+
+      // Si tiene partner, crear AMBAS reservas
+      if (user.partnerId) {
+        console.log(`✅ Creando reservas para grupo: ${user.id} y ${user.partnerId}`);
+
+        // Generar códigos QR únicos para ambos
+        const qrCode1 = uuidv4();
+        const qrCode2 = uuidv4();
+        const qrImage1 = await generateQR(qrCode1);
+        const qrImage2 = await generateQR(qrCode2);
+
+        // Crear ambas reservas en transacción
+        const reservations = await prisma.$transaction([
+          prisma.reservation.create({
+            data: {
+              userId: user.id,
+              timeslotId: newTimeslotId,
+              qrCode: qrCode1,
+              createdAt: getEcuadorTime(),
+            },
+            include: {
+              user: true,
+              timeslot: true,
+            },
+          }),
+          prisma.reservation.create({
+            data: {
+              userId: user.partnerId,
+              timeslotId: newTimeslotId,
+              qrCode: qrCode2,
+              createdAt: getEcuadorTime(),
+            },
+            include: {
+              user: true,
+              timeslot: true,
+            },
+          }),
+        ]);
+
+        console.log(`✅ Reservas creadas para ambos usuarios del grupo`);
+
+        // Enviar notificaciones a AMBOS usuarios
+        console.log('📨 Enviando notificaciones a ambos usuarios...');
+        const notificationPromises = [];
+        const whatsappEnabled = process.env.ESCAPEROOM_WHATSAPP_ENABLED === 'true';
+
+        // Notificaciones para usuario principal
+        if (process.env.ESCAPEROOM_RESEND_API_KEY && process.env.ESCAPEROOM_RESEND_API_KEY !== 're_xxxxxxxxxxxxxxxxxxxxxxxxxx') {
+          notificationPromises.push(
+            sendReservationEmail(updatedUser.email, reservations[0], qrCode1)
+          );
+        }
+        
+        if (
+          whatsappEnabled &&
+          process.env.ESCAPEROOM_TWILIO_ACCOUNT_SID && 
+          process.env.ESCAPEROOM_TWILIO_AUTH_TOKEN &&
+          process.env.ESCAPEROOM_TWILIO_ACCOUNT_SID !== 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+        ) {
+          notificationPromises.push(
+            sendReservationWhatsApp(updatedUser.whatsapp, reservations[0], qrImage1)
+          );
+        }
+
+        // Notificaciones para partner
+        if (updatedPartner) {
+          if (process.env.ESCAPEROOM_RESEND_API_KEY && process.env.ESCAPEROOM_RESEND_API_KEY !== 're_xxxxxxxxxxxxxxxxxxxxxxxxxx') {
+            notificationPromises.push(
+              sendReservationEmail(updatedPartner.email, reservations[1], qrCode2)
+            );
+          }
+          
+          if (
+            whatsappEnabled &&
+            process.env.ESCAPEROOM_TWILIO_ACCOUNT_SID && 
+            process.env.ESCAPEROOM_TWILIO_AUTH_TOKEN &&
+            process.env.ESCAPEROOM_TWILIO_ACCOUNT_SID !== 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+          ) {
+            notificationPromises.push(
+              sendReservationWhatsApp(updatedPartner.whatsapp, reservations[1], qrImage2)
+            );
+          }
+        }
+
+        if (notificationPromises.length > 0) {
+          await Promise.all(notificationPromises)
+            .then(() => console.log('✅ Notificaciones enviadas a ambos usuarios'))
+            .catch((err) => console.error('❌ Error enviando notificaciones:', err));
+        }
+
+        return {
+          message: 'Reservas creadas y QR enviados exitosamente a ambos usuarios',
+          sentTo: {
+            email: updatedUser.email,
+            whatsapp: updatedUser.whatsapp,
+          },
+          partnerSentTo: updatedPartner ? {
+            email: updatedPartner.email,
+            whatsapp: updatedPartner.whatsapp,
+          } : null,
+          emailUpdated: newEmail ? true : false,
+          whatsappUpdated: newWhatsapp ? true : false,
+          timeslotUpdated: false,
+          reservationCreated: true,
+        };
+      }
+
+      // Si NO tiene partner, crear solo UNA reserva
+      const qrCode = uuidv4();
+      const qrImage = await generateQR(qrCode);
+
       const newReservation = await prisma.reservation.create({
         data: {
           userId: user.id,
@@ -429,11 +582,18 @@ export class ReservationService {
 
     // Validar que la reserva no esté usada o cancelada
     if (activeReservation.status === 'USED') {
-      throw new BadRequestError('No puedes modificar una reserva ya utilizada');
+      const usedDate = activeReservation.checkedInAt 
+        ? new Date(activeReservation.checkedInAt).toLocaleString('es-ES', { 
+            dateStyle: 'short', 
+            timeStyle: 'short',
+            timeZone: 'America/Guayaquil'
+          })
+        : 'fecha desconocida';
+      throw new BadRequestError(`No se puede reenviar el QR. Esta reserva ya fue utilizada el ${usedDate}. Las reservas usadas no pueden ser modificadas.`);
     }
 
     if (activeReservation.status === 'CANCELLED') {
-      throw new BadRequestError('No puedes modificar una reserva cancelada');
+      throw new BadRequestError('No se puede reenviar el QR. Esta reserva fue cancelada previamente. Por favor, crea una nueva reserva.');
     }
 
     // 2. Preparar datos de actualización del usuario
@@ -446,7 +606,7 @@ export class ReservationService {
       });
 
       if (existingUser && existingUser.id !== user.id) {
-        throw new ConflictError('El nuevo email ya está en uso');
+        throw new ConflictError(`No se puede actualizar el email. La dirección ${newEmail} ya está registrada por otra persona. Por favor, usa un email diferente.`);
       }
 
       updateUserData.email = newEmail;
@@ -514,7 +674,7 @@ export class ReservationService {
           where: { email: newPartnerEmail },
         });
         if (existingUser && existingUser.id !== user.partner.id) {
-          throw new ConflictError('El nuevo email del compañero ya está en uso');
+          throw new ConflictError(`No se puede actualizar el email del compañero. La dirección ${newPartnerEmail} ya está registrada por otra persona. Por favor, usa un email diferente.`);
         }
         updatePartnerData.email = newPartnerEmail;
         console.log(`📧 Email del compañero actualizado a ${newPartnerEmail}`);

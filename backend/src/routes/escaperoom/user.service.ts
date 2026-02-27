@@ -47,11 +47,11 @@ export class UserService {
       const usersWithPartner = existingUsers.filter(u => u.partnerId !== null);
       if (usersWithPartner.length > 0) {
         const participatedEmails = usersWithPartner.map(u => u.email).join(', ');
-        throw new ConflictError(`Las siguientes personas ya participaron en un grupo: ${participatedEmails}`);
+        throw new ConflictError(`No se puede registrar el grupo. Los siguientes emails ya participaron en otro grupo: ${participatedEmails}. Cada persona solo puede participar una vez.`);
       }
 
       const existingEmails = existingUsers.map(u => u.email).join(', ');
-      throw new ConflictError(`Los siguientes emails ya están registrados: ${existingEmails}`);
+      throw new ConflictError(`No se puede completar el registro. Los siguientes emails ya están registrados en el sistema: ${existingEmails}. Por favor, verifica los datos ingresados.`);
     }
 
     // Crear ambos usuarios en una transacción y vincularlos como partners

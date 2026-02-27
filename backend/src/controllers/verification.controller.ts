@@ -59,11 +59,19 @@ export class VerificationController {
           registrationDate: updatedRegistration.registrationDate
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error verifying ticket:', error);
+      
+      if (error.message?.includes('no encontrado') || error.message?.includes('not found')) {
+        return res.status(404).json({
+          success: false,
+          error: 'Ticket no encontrado'
+        });
+      }
+      
       res.status(500).json({ 
         success: false,
-        error: 'Error al verificar ticket' 
+        error: error.message || 'Error al verificar ticket' 
       });
     }
   }

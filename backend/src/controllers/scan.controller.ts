@@ -36,13 +36,35 @@ export class ScanController {
       }
 
       res.json(result);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error validating QR:', error);
+      
+      // Manejar errores específicos
+      if (error.message?.includes('no encontrado') || error.message?.includes('not found')) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'QR_NOT_FOUND',
+            message: 'Código QR no encontrado'
+          }
+        });
+      }
+      
+      if (error.message?.includes('ya fue utilizado') || error.message?.includes('already used')) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'QR_ALREADY_USED',
+            message: 'Este código QR ya fue utilizado'
+          }
+        });
+      }
+      
       res.status(500).json({
         success: false,
         error: {
           code: 'SERVER_ERROR',
-          message: 'Error interno del servidor'
+          message: 'Error al validar código QR'
         }
       });
     }
@@ -69,13 +91,24 @@ export class ScanController {
       }
 
       res.json(result);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error scanning entrada:', error);
+      
+      if (error.message?.includes('no encontrado') || error.message?.includes('not found')) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'QR_NOT_FOUND',
+            message: 'Código QR no encontrado'
+          }
+        });
+      }
+      
       res.status(500).json({
         success: false,
         error: {
           code: 'SERVER_ERROR',
-          message: 'Error interno del servidor'
+          message: 'Error al procesar entrada'
         }
       });
     }
@@ -102,13 +135,24 @@ export class ScanController {
       }
 
       res.json(result);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error scanning entrega:', error);
+      
+      if (error.message?.includes('no encontrado') || error.message?.includes('not found')) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'QR_NOT_FOUND',
+            message: 'Código QR no encontrado'
+          }
+        });
+      }
+      
       res.status(500).json({
         success: false,
         error: {
           code: 'SERVER_ERROR',
-          message: 'Error interno del servidor'
+          message: 'Error al procesar entrega'
         }
       });
     }
@@ -135,13 +179,24 @@ export class ScanController {
       }
 
       res.json(result);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error scanning completo:', error);
+      
+      if (error.message?.includes('no encontrado') || error.message?.includes('not found')) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'QR_NOT_FOUND',
+            message: 'Código QR no encontrado'
+          }
+        });
+      }
+      
       res.status(500).json({
         success: false,
         error: {
           code: 'SERVER_ERROR',
-          message: 'Error interno del servidor'
+          message: 'Error al procesar escaneo completo'
         }
       });
     }
@@ -168,13 +223,24 @@ export class ScanController {
       }
 
       res.json(result);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error scanning sorteo:', error);
+      
+      if (error.message?.includes('no encontrado') || error.message?.includes('not found')) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'QR_NOT_FOUND',
+            message: 'Código QR no encontrado'
+          }
+        });
+      }
+      
       res.status(500).json({
         success: false,
         error: {
           code: 'SERVER_ERROR',
-          message: 'Error interno del servidor'
+          message: 'Error al procesar sorteo'
         }
       });
     }
@@ -189,13 +255,13 @@ export class ScanController {
         limit ? parseInt(limit as string) : 50
       );
       res.json(result);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching history:', error);
       res.status(500).json({
         success: false,
         error: {
           code: 'SERVER_ERROR',
-          message: 'Error interno del servidor'
+          message: 'Error al obtener historial'
         }
       });
     }
@@ -206,13 +272,13 @@ export class ScanController {
       const { date } = req.query;
       const result = await scanService.getStats(date as string);
       res.json(result);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching stats:', error);
       res.status(500).json({
         success: false,
         error: {
           code: 'SERVER_ERROR',
-          message: 'Error interno del servidor'
+          message: 'Error al obtener estadísticas'
         }
       });
     }

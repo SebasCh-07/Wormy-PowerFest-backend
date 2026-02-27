@@ -143,11 +143,20 @@ export class RegistrationController {
           email: emailResult
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating registration:', error);
+      
+      // Manejar errores de Prisma
+      if (error.code === 'P2002') {
+        return res.status(409).json({
+          success: false,
+          error: 'El email o cédula ya están registrados'
+        });
+      }
+      
       res.status(500).json({
         success: false,
-        error: 'Error al crear registro'
+        error: error.message || 'Error al crear registro'
       });
     }
   }
@@ -243,11 +252,26 @@ export class RegistrationController {
           email: emailResult
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error resending QR:', error);
+      
+      if (error.message?.includes('no encontrado') || error.message?.includes('not found')) {
+        return res.status(404).json({
+          success: false,
+          error: 'Registro no encontrado'
+        });
+      }
+      
+      if (error.message?.includes('ya fue utilizado') || error.message?.includes('already used')) {
+        return res.status(400).json({
+          success: false,
+          error: 'Esta reserva ya fue utilizada'
+        });
+      }
+      
       res.status(500).json({
         success: false,
-        error: 'Error al reenviar QR'
+        error: error.message || 'Error al reenviar QR'
       });
     }
   }

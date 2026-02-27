@@ -34,12 +34,12 @@ export class TriviaService {
     });
 
     if (!user) {
-      throw new NotFoundError('Usuario no encontrado');
+      throw new NotFoundError('Usuario no encontrado. El ID de usuario proporcionado no existe en el sistema. Por favor, verifica que estés registrado correctamente.');
     }
 
     // Verificar que se respondieron exactamente 5 preguntas
     if (answers.length !== 5) {
-      throw new BadRequestError('Debes responder las 5 preguntas');
+      throw new BadRequestError(`Debes responder todas las preguntas de la trivia. Se requieren 5 respuestas, pero solo se recibieron ${answers.length}. Por favor, completa todas las preguntas.`);
     }
 
     // Validar cada respuesta
@@ -107,7 +107,7 @@ export class TriviaService {
     });
 
     if (!user) {
-      throw new NotFoundError('Usuario no encontrado');
+      throw new NotFoundError('Usuario no encontrado. El ID de usuario proporcionado no existe en el sistema. Por favor, verifica que estés registrado correctamente.');
     }
 
     // Obtener fecha actual en Ecuador
@@ -130,7 +130,7 @@ export class TriviaService {
     });
 
     if (todayTimeslots.length === 0) {
-      throw new BadRequestError('No hay turnos disponibles para hoy');
+      throw new BadRequestError('No hay turnos disponibles para el día de hoy. El evento puede haber finalizado o los turnos aún no han sido generados. Contacta al personal del evento para más información.');
     }
 
     // Obtener hora y minutos actuales en Ecuador
