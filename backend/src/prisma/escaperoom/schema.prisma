@@ -44,7 +44,7 @@ model TimeSlot {
   date                DateTime
   startTime           String
   endTime             String
-  capacity            Int           @default(2)
+  capacity            Int           @default(100)
   reservations        Reservation[]
 }
 

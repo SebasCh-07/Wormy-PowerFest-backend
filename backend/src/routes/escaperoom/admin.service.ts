@@ -81,6 +81,9 @@ export class AdminService {
       endHour
     );
 
+    // Eliminar configuraciones anteriores para evitar conflictos
+    await prisma.timeslotConfig.deleteMany({});
+
     const config = await prisma.timeslotConfig.create({
       data: {
         eventDates,
