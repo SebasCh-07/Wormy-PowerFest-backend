@@ -64,7 +64,7 @@ export class ScanController {
         success: false,
         error: {
           code: 'SERVER_ERROR',
-          message: 'Error al validar código QR'
+          message: error.message || 'Error al validar código QR'
         }
       });
     }
@@ -108,7 +108,7 @@ export class ScanController {
         success: false,
         error: {
           code: 'SERVER_ERROR',
-          message: 'Error al procesar entrada'
+          message: error.message || 'Error al procesar entrada'
         }
       });
     }
@@ -152,7 +152,7 @@ export class ScanController {
         success: false,
         error: {
           code: 'SERVER_ERROR',
-          message: 'Error al procesar entrega'
+          message: error.message || 'Error al procesar entrega'
         }
       });
     }
@@ -196,7 +196,7 @@ export class ScanController {
         success: false,
         error: {
           code: 'SERVER_ERROR',
-          message: 'Error al procesar escaneo completo'
+          message: error.message || 'Error al procesar escaneo completo'
         }
       });
     }
@@ -240,7 +240,7 @@ export class ScanController {
         success: false,
         error: {
           code: 'SERVER_ERROR',
-          message: 'Error al procesar sorteo'
+          message: error.message || 'Error al procesar sorteo'
         }
       });
     }
@@ -261,7 +261,7 @@ export class ScanController {
         success: false,
         error: {
           code: 'SERVER_ERROR',
-          message: 'Error al obtener historial'
+          message: error.message || 'Error al obtener historial'
         }
       });
     }
@@ -278,7 +278,7 @@ export class ScanController {
         success: false,
         error: {
           code: 'SERVER_ERROR',
-          message: 'Error al obtener estadísticas'
+          message: error.message || 'Error al obtener estadísticas'
         }
       });
     }

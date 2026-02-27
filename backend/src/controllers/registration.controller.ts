@@ -175,11 +175,11 @@ export class RegistrationController {
         data: registrations,
         total: registrations.length
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching registrations:', error);
       res.status(500).json({
         success: false,
-        error: 'Error al obtener registros'
+        error: error.message || 'Error al obtener registros'
       });
     }
   }
@@ -200,11 +200,11 @@ export class RegistrationController {
         success: true,
         data: registration
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching registration:', error);
       res.status(500).json({
         success: false,
-        error: 'Error al obtener registro'
+        error: error.message || 'Error al obtener registro'
       });
     }
   }
@@ -216,11 +216,11 @@ export class RegistrationController {
         success: true,
         data: stats
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching stats:', error);
       res.status(500).json({
         success: false,
-        error: 'Error al obtener estadísticas'
+        error: error.message || 'Error al obtener estadísticas'
       });
     }
   }
@@ -336,11 +336,11 @@ export class RegistrationController {
           email: emailResult
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating registration:', error);
       res.status(500).json({
         success: false,
-        error: 'Error al actualizar registro'
+        error: error.message || 'Error al actualizar registro'
       });
     }
   }
@@ -388,11 +388,11 @@ export class RegistrationController {
         message: 'QR enviado al correo alternativo exitosamente',
         notification: emailResult
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending alternative email:', error);
       res.status(500).json({
         success: false,
-        error: 'Error al enviar email'
+        error: error.message || 'Error al enviar email'
       });
     }
   }
@@ -430,11 +430,11 @@ export class RegistrationController {
         success: true,
         data: registration
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error searching by cedula:', error);
       res.status(500).json({
         success: false,
-        error: 'Error al buscar registro'
+        error: error.message || 'Error al buscar registro'
       });
     }
   }
