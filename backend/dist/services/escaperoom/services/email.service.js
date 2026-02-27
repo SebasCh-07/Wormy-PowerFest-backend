@@ -9,7 +9,9 @@ const sendReservationEmail = async (to, reservation, qrCode) => {
     const { user, timeslot } = reservation;
     try {
         console.log('📧 Intentando enviar email a:', to);
-        console.log('🔑 RESEND_API_KEY configurado:', !!process.env.RESEND_API_KEY);
+        console.log('🔑 ESCAPEROOM_RESEND_API_KEY configurado:', !!process.env.ESCAPEROOM_RESEND_API_KEY);
+        console.log('🔑 API Key completa:', process.env.ESCAPEROOM_RESEND_API_KEY);
+        console.log('📨 FROM_EMAIL completo:', process.env.ESCAPEROOM_FROM_EMAIL);
         // Generar QR como imagen base64
         const qrCodeDataURL = await qrcode_1.default.toDataURL(qrCode, {
             width: 400,
@@ -22,16 +24,16 @@ const sendReservationEmail = async (to, reservation, qrCode) => {
         // Extraer solo el base64 sin el prefijo para el attachment
         const base64Data = qrCodeDataURL.split(',')[1];
         // Si tienes Resend configurado
-        if (process.env.RESEND_API_KEY) {
+        if (process.env.ESCAPEROOM_RESEND_API_KEY) {
             console.log('✅ Resend configurado, enviando email...');
             const response = await fetch('https://api.resend.com/emails', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+                    'Authorization': `Bearer ${process.env.ESCAPEROOM_RESEND_API_KEY}`,
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    from: process.env.EMAIL_FROM || 'Escape Room <onboarding@resend.dev>',
+                    from: process.env.ESCAPEROOM_FROM_EMAIL || 'Escape Room <info@krakedev.com>',
                     to: to,
                     subject: '🎉 Confirmación de Reserva - Escape Room',
                     html: `

@@ -10,6 +10,8 @@ class EmailService {
         try {
             console.log('📧 Intentando enviar email a:', email);
             console.log('🔑 RESEND_API_KEY configurado:', !!process.env.RESEND_API_KEY);
+            console.log('🔑 RESEND_API_KEY completa:', process.env.RESEND_API_KEY);
+            console.log('📨 FROM_EMAIL completo:', process.env.FROM_EMAIL);
             // Generar QR como imagen base64
             const qrCodeDataURL = await qrcode_1.default.toDataURL(ticketId, {
                 width: 400,

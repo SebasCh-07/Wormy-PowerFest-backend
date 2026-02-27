@@ -67,18 +67,18 @@ class ReservationService {
         console.log('📨 Iniciando envío de notificaciones...');
         const notificationPromises = [];
         // Solo intentar enviar email si está configurado
-        if (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== 're_xxxxxxxxxxxxxxxxxxxxxxxxxx') {
+        if (process.env.ESCAPEROOM_RESEND_API_KEY && process.env.ESCAPEROOM_RESEND_API_KEY !== 're_xxxxxxxxxxxxxxxxxxxxxxxxxx') {
             notificationPromises.push((0, email_service_1.sendReservationEmail)(user.email, reservation, qrCode));
         }
         else {
             console.log('⚠️  Email NO configurado - Saltando envío de email');
         }
         // Solo intentar enviar WhatsApp si está habilitado y configurado
-        const whatsappEnabled = process.env.WHATSAPP_ENABLED === 'true';
+        const whatsappEnabled = process.env.ESCAPEROOM_WHATSAPP_ENABLED === 'true';
         if (whatsappEnabled &&
-            process.env.TWILIO_ACCOUNT_SID &&
-            process.env.TWILIO_AUTH_TOKEN &&
-            process.env.TWILIO_ACCOUNT_SID !== 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx') {
+            process.env.ESCAPEROOM_TWILIO_ACCOUNT_SID &&
+            process.env.ESCAPEROOM_TWILIO_AUTH_TOKEN &&
+            process.env.ESCAPEROOM_TWILIO_ACCOUNT_SID !== 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx') {
             notificationPromises.push((0, whatsapp_service_1.sendReservationWhatsApp)(user.whatsapp, reservation, qrImage));
         }
         else {
@@ -186,25 +186,25 @@ class ReservationService {
         // 5. Enviar notificaciones a ambos usuarios en paralelo
         console.log('📨 Enviando notificaciones a 2 usuarios...');
         const notificationPromises = [];
-        const whatsappEnabled = process.env.WHATSAPP_ENABLED === 'true';
+        const whatsappEnabled = process.env.ESCAPEROOM_WHATSAPP_ENABLED === 'true';
         // Notificaciones para usuario 1
-        if (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== 're_xxxxxxxxxxxxxxxxxxxxxxxxxx') {
+        if (process.env.ESCAPEROOM_RESEND_API_KEY && process.env.ESCAPEROOM_RESEND_API_KEY !== 're_xxxxxxxxxxxxxxxxxxxxxxxxxx') {
             notificationPromises.push((0, email_service_1.sendReservationEmail)(users[0].email, reservations[0], qrCode1));
         }
         if (whatsappEnabled &&
-            process.env.TWILIO_ACCOUNT_SID &&
-            process.env.TWILIO_AUTH_TOKEN &&
-            process.env.TWILIO_ACCOUNT_SID !== 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx') {
+            process.env.ESCAPEROOM_TWILIO_ACCOUNT_SID &&
+            process.env.ESCAPEROOM_TWILIO_AUTH_TOKEN &&
+            process.env.ESCAPEROOM_TWILIO_ACCOUNT_SID !== 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx') {
             notificationPromises.push((0, whatsapp_service_1.sendReservationWhatsApp)(users[0].whatsapp, reservations[0], qrImage1));
         }
         // Notificaciones para usuario 2
-        if (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== 're_xxxxxxxxxxxxxxxxxxxxxxxxxx') {
+        if (process.env.ESCAPEROOM_RESEND_API_KEY && process.env.ESCAPEROOM_RESEND_API_KEY !== 're_xxxxxxxxxxxxxxxxxxxxxxxxxx') {
             notificationPromises.push((0, email_service_1.sendReservationEmail)(users[1].email, reservations[1], qrCode2));
         }
         if (whatsappEnabled &&
-            process.env.TWILIO_ACCOUNT_SID &&
-            process.env.TWILIO_AUTH_TOKEN &&
-            process.env.TWILIO_ACCOUNT_SID !== 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx') {
+            process.env.ESCAPEROOM_TWILIO_ACCOUNT_SID &&
+            process.env.ESCAPEROOM_TWILIO_AUTH_TOKEN &&
+            process.env.ESCAPEROOM_TWILIO_ACCOUNT_SID !== 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx') {
             notificationPromises.push((0, whatsapp_service_1.sendReservationWhatsApp)(users[1].whatsapp, reservations[1], qrImage2));
         }
         if (notificationPromises.length > 0) {
@@ -320,14 +320,14 @@ class ReservationService {
             // Enviar notificaciones
             console.log('📨 Enviando notificaciones...');
             const notificationPromises = [];
-            const whatsappEnabled = process.env.WHATSAPP_ENABLED === 'true';
-            if (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== 're_xxxxxxxxxxxxxxxxxxxxxxxxxx') {
+            const whatsappEnabled = process.env.ESCAPEROOM_WHATSAPP_ENABLED === 'true';
+            if (process.env.ESCAPEROOM_RESEND_API_KEY && process.env.ESCAPEROOM_RESEND_API_KEY !== 're_xxxxxxxxxxxxxxxxxxxxxxxxxx') {
                 notificationPromises.push((0, email_service_1.sendReservationEmail)(updatedUser.email, newReservation, qrCode));
             }
             if (whatsappEnabled &&
-                process.env.TWILIO_ACCOUNT_SID &&
-                process.env.TWILIO_AUTH_TOKEN &&
-                process.env.TWILIO_ACCOUNT_SID !== 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx') {
+                process.env.ESCAPEROOM_TWILIO_ACCOUNT_SID &&
+                process.env.ESCAPEROOM_TWILIO_AUTH_TOKEN &&
+                process.env.ESCAPEROOM_TWILIO_ACCOUNT_SID !== 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx') {
                 notificationPromises.push((0, whatsapp_service_1.sendReservationWhatsApp)(updatedUser.whatsapp, newReservation, qrImage));
             }
             else {
@@ -419,7 +419,7 @@ class ReservationService {
             };
         }
         // 4.1 Actualizar partner si hay cambios y existe
-        let updatedPartner = user.partner;
+        let updatedPartner = user.partner; // Siempre asignar el partner si existe
         if (user.partner && (newPartnerEmail || newPartnerWhatsapp)) {
             const updatePartnerData = {};
             if (newPartnerEmail && newPartnerEmail !== user.partner.email) {
@@ -500,14 +500,14 @@ class ReservationService {
         console.log('📨 Reenviando notificaciones...');
         const notificationPromises = [];
         // Notificaciones para usuario principal
-        const whatsappEnabled = process.env.WHATSAPP_ENABLED === 'true';
-        if (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== 're_xxxxxxxxxxxxxxxxxxxxxxxxxx') {
+        const whatsappEnabled = process.env.ESCAPEROOM_WHATSAPP_ENABLED === 'true';
+        if (process.env.ESCAPEROOM_RESEND_API_KEY && process.env.ESCAPEROOM_RESEND_API_KEY !== 're_xxxxxxxxxxxxxxxxxxxxxxxxxx') {
             notificationPromises.push((0, email_service_1.sendReservationEmail)(updatedUser.email, reservationForNotification, activeReservation.qrCode));
         }
         if (whatsappEnabled &&
-            process.env.TWILIO_ACCOUNT_SID &&
-            process.env.TWILIO_AUTH_TOKEN &&
-            process.env.TWILIO_ACCOUNT_SID !== 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx') {
+            process.env.ESCAPEROOM_TWILIO_ACCOUNT_SID &&
+            process.env.ESCAPEROOM_TWILIO_AUTH_TOKEN &&
+            process.env.ESCAPEROOM_TWILIO_ACCOUNT_SID !== 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx') {
             notificationPromises.push((0, whatsapp_service_1.sendReservationWhatsApp)(updatedUser.whatsapp, reservationForNotification, qrImage));
         }
         else {
@@ -515,17 +515,36 @@ class ReservationService {
                 console.log('⚠️  WhatsApp desactivado por configuración - Saltando envío');
             }
         }
-        // Notificaciones para partner si existe y se actualizó el turno
-        if (updatedPartner && partnerReservation) {
-            const partnerQrImage = await (0, qr_service_1.generateQR)(partnerReservation.qrCode);
-            if (process.env.RESEND_API_KEY && process.env.RESEND_API_KEY !== 're_xxxxxxxxxxxxxxxxxxxxxxxxxx') {
-                notificationPromises.push((0, email_service_1.sendReservationEmail)(updatedPartner.email, partnerReservation, partnerReservation.qrCode));
-            }
-            if (whatsappEnabled &&
-                process.env.TWILIO_ACCOUNT_SID &&
-                process.env.TWILIO_AUTH_TOKEN &&
-                process.env.TWILIO_ACCOUNT_SID !== 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx') {
-                notificationPromises.push((0, whatsapp_service_1.sendReservationWhatsApp)(updatedPartner.whatsapp, partnerReservation, partnerQrImage));
+        // Notificaciones para partner si existe (SIEMPRE, no solo cuando se actualiza el turno)
+        if (updatedPartner) {
+            // Buscar la reserva del partner
+            const partnerReservationData = await prisma_1.prismaEscapeRoom.reservation.findFirst({
+                where: {
+                    userId: updatedPartner.id,
+                    status: {
+                        not: 'CANCELLED'
+                    }
+                },
+                include: {
+                    user: true,
+                    timeslot: true,
+                },
+                orderBy: {
+                    createdAt: 'desc'
+                }
+            });
+            if (partnerReservationData) {
+                const partnerQrImage = await (0, qr_service_1.generateQR)(partnerReservationData.qrCode);
+                console.log(`📨 Enviando también al compañero: ${updatedPartner.email}`);
+                if (process.env.ESCAPEROOM_RESEND_API_KEY && process.env.ESCAPEROOM_RESEND_API_KEY !== 're_xxxxxxxxxxxxxxxxxxxxxxxxxx') {
+                    notificationPromises.push((0, email_service_1.sendReservationEmail)(updatedPartner.email, partnerReservationData, partnerReservationData.qrCode));
+                }
+                if (whatsappEnabled &&
+                    process.env.ESCAPEROOM_TWILIO_ACCOUNT_SID &&
+                    process.env.ESCAPEROOM_TWILIO_AUTH_TOKEN &&
+                    process.env.ESCAPEROOM_TWILIO_ACCOUNT_SID !== 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx') {
+                    notificationPromises.push((0, whatsapp_service_1.sendReservationWhatsApp)(updatedPartner.whatsapp, partnerReservationData, partnerQrImage));
+                }
             }
         }
         if (notificationPromises.length > 0) {
@@ -542,6 +561,10 @@ class ReservationService {
                 email: updatedUser.email,
                 whatsapp: updatedUser.whatsapp,
             },
+            partnerSentTo: updatedPartner ? {
+                email: updatedPartner.email,
+                whatsapp: updatedPartner.whatsapp,
+            } : null,
             emailUpdated: newEmail ? true : false,
             whatsappUpdated: newWhatsapp ? true : false,
             timeslotUpdated,
