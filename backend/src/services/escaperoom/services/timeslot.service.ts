@@ -28,7 +28,8 @@ export class TimeslotService {
       const endMinute = endHour * 60;
 
       // Generar turnos seguidos (sin espacios entre ellos)
-      while (currentMinute + durationMinutes <= endMinute) {
+      // Solo generar turnos que TERMINEN antes o igual a endHour
+      while (currentMinute < endMinute && currentMinute + durationMinutes <= endMinute) {
         const startHourCalc = Math.floor(currentMinute / 60);
         const startMinuteCalc = currentMinute % 60;
 
